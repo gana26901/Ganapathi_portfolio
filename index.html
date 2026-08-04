@@ -473,10 +473,25 @@ header {
     color: var(--accent);
 }
 
+/* Top row = teal, bottom row = amber — same alternating pattern
+   used in the Technical Skills section further down the page. */
+.hero-track-wrap.reverse .hero-track span i {
+    color: var(--amber);
+}
+
+.hero-track-wrap.reverse .hero-track span {
+    border-color: rgba(242, 184, 75, .3);
+}
+
 .hero-track span:hover {
     border-color: var(--accent);
     background: var(--accent-dim);
     transform: translateY(-2px);
+}
+
+.hero-track-wrap.reverse .hero-track span:hover {
+    border-color: var(--amber);
+    background: var(--amber-dim);
 }
 
 @keyframes heroScroll {
@@ -739,10 +754,19 @@ header {
 }
 
 .skill-row {
+    position: relative;
     border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
     border-radius: var(--radius);
     background: linear-gradient(180deg, rgba(79, 216, 196, 0.03), transparent 40%), var(--surface);
     overflow: hidden;
+}
+
+/* Rows alternate top-to-bottom: teal, amber, teal, amber —
+   .reverse already marks rows 2 and 4 (Monitoring, Soft Skills). */
+.skill-row.reverse {
+    border-left-color: var(--amber);
+    background: linear-gradient(180deg, rgba(242, 184, 75, 0.05), transparent 40%), var(--surface);
 }
 
 .skill-row-head {
@@ -760,10 +784,14 @@ header {
     font-size: 0.78rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--amber);
+    color: var(--accent);
     display: flex;
     align-items: center;
     gap: 9px;
+}
+
+.skill-row.reverse .skill-row-title {
+    color: var(--amber);
 }
 
 .skill-row-title .idx {
@@ -1575,6 +1603,60 @@ html, body {
     max-width: none; /* the track itself must stay wider than its wrapper to scroll */
 }
 
+/* =========================================================
+   REAL FIX — vertical rhythm between sections
+   `.wrap { padding: 0 32px }` is a class selector, so it always
+   out-specifies the plain-element rule `section { padding: 110px 0 }`
+   above, no matter the source order. Every section's built-in
+   breathing room was silently being zeroed out. Using `section.wrap`
+   (element + class) guarantees this wins, while :not(.hero) leaves
+   the hero's own custom top/bottom padding untouched.
+   ========================================================= */
+section.wrap:not(.hero) {
+    padding-top: 96px;
+    padding-bottom: 96px;
+}
+
+@media (max-width: 1024px) {
+    section.wrap:not(.hero) {
+        padding-top: 78px;
+        padding-bottom: 78px;
+    }
+}
+
+@media (max-width: 700px) {
+    section.wrap:not(.hero) {
+        padding-top: 56px;
+        padding-bottom: 56px;
+    }
+}
+
+@media (max-width: 420px) {
+    section.wrap:not(.hero) {
+        padding-top: 44px;
+        padding-bottom: 44px;
+    }
+}
+
+/* Contact is the closing section — keep the quick-facts strip and
+   footer close beneath it so the page reads as one clean ending
+   instead of a separate trailing block. */
+#contact {
+    padding-bottom: 48px;
+}
+
+@media (max-width: 700px) {
+    #contact { padding-bottom: 36px; }
+}
+
+.facts-strip {
+    margin-top: 8px;
+}
+
+footer {
+    margin-top: 0;
+}
+
 </style>
 </head>
 
@@ -2290,12 +2372,36 @@ base_config = [
     // (by default a hard refresh on GitHub Pages can snap back to the
     // top; this remembers where you were and restores it after load)
     if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
+
+    function saveScrollPos() {
+      try { sessionStorage.setItem('scrollY', String(window.scrollY)); } catch (e) {}
+    }
+
+    // iOS Safari frequently never fires 'beforeunload' at all, so that
+    // alone silently failed to save the position. 'pagehide' is the
+    // reliable one on iOS; a debounced scroll listener is a second
+    // safety net so the position is never more than ~200ms stale.
+    window.addEventListener('pagehide', saveScrollPos);
+    window.addEventListener('beforeunload', saveScrollPos);
+    let scrollSaveTimer;
+    window.addEventListener('scroll', () => {
+      clearTimeout(scrollSaveTimer);
+      scrollSaveTimer = setTimeout(saveScrollPos, 200);
+    }, { passive: true });
+
     window.addEventListener('load', () => {
       const saved = sessionStorage.getItem('scrollY');
-      if (saved) window.scrollTo(0, parseInt(saved, 10));
-    });
-    window.addEventListener('beforeunload', () => {
-      sessionStorage.setItem('scrollY', String(window.scrollY));
+      if (saved && parseInt(saved, 10) > 0) {
+        // html has scroll-behavior:smooth, which would otherwise animate
+        // from the top down to the saved position — visibly looking like
+        // "the page loads from the start" even though it's restoring
+        // correctly. Jump instantly instead, then restore smooth scroll.
+        const root = document.documentElement;
+        const prev = root.style.scrollBehavior;
+        root.style.scrollBehavior = 'auto';
+        window.scrollTo(0, parseInt(saved, 10));
+        root.style.scrollBehavior = prev || '';
+      }
     });
 
     // ---- Seamless hero skill marquee ----
