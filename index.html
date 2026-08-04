@@ -746,11 +746,41 @@ base_config = [
     function openModal(id) {
       const overlay = document.getElementById(id);
       if (!overlay) return;
+
       lastFocused = document.activeElement;
+
+      // Always start scrolled to the very top — both the overlay
+      // (in case a taller modal scrolled it last time) and the modal
+      // card itself (in case its own content scrolls internally).
+      overlay.scrollTop = 0;
+      const modalCard = overlay.querySelector('.modal');
+      if (modalCard) modalCard.scrollTop = 0;
+
       overlay.classList.add('open');
       document.body.style.overflow = 'hidden';
+
+      // Re-assert scroll-to-top on the next frame, after layout/paint,
+      // and again after any opening transition finishes.
+      requestAnimationFrame(() => {
+        overlay.scrollTop = 0;
+        if (modalCard) modalCard.scrollTop = 0;
+      });
+
       const closeBtn = overlay.querySelector('.modal-close');
-      if (closeBtn) closeBtn.focus();
+      if (closeBtn) {
+        // preventScroll stops the browser from auto-scrolling the
+        // overlay to "bring the focused element into view", which is
+        // what was causing the modal to open already scrolled down.
+        closeBtn.focus({ preventScroll: true });
+      }
+
+      overlay.addEventListener('transitionend', function onEnd(e){
+        if (e.target === overlay) {
+          overlay.scrollTop = 0;
+          if (modalCard) modalCard.scrollTop = 0;
+          overlay.removeEventListener('transitionend', onEnd);
+        }
+      });
     }
 
     function closeModal(overlay) {
