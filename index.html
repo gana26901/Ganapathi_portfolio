@@ -331,6 +331,18 @@ header {
     .hero-photo-col {
         order: -1;
     }
+
+    /* .photo-card used height:100% to stretch to match the text
+       column (via .hero{align-items:stretch}). In the single-column
+       mobile layout there's no sibling to stretch against, so
+       height:100% resolves against an auto-height parent → 0px,
+       and overflow:hidden then clipped the avatar entirely. Give it
+       a real intrinsic size instead. */
+    .photo-card {
+        height: auto;
+        aspect-ratio: 4 / 4.6;
+        margin: 0 auto;
+    }
 }
 
 .hero h1 {
@@ -647,19 +659,23 @@ header {
 .photo-dock a {
     font-family: var(--font-mono);
     font-size: 0.72rem;
+    font-weight: 600;
     padding: 6px 12px;
     border-radius: 999px;
-    background: var(--surface);
-    border: 1px solid rgba(79, 216, 196, .4);
-    color: var(--muted);
-    transition: all .2s ease;
+    /* Colored by default (not just on hover) — this is exactly the
+       Fortinet / Aruba / AWS trio, so they stay highlighted always. */
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: var(--bg);
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
 }
 
 .photo-dock a:hover,
 .photo-dock a:focus-visible {
-    color: var(--bg);
-    background: var(--accent);
-    border-color: var(--accent);
+    background: #6ee6d4;
+    border-color: #6ee6d4;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px -8px rgba(79, 216, 196, .6);
 }
 
 /* ---------- ABOUT ---------- */
@@ -763,13 +779,30 @@ header {
 }
 
 .skill-track-wrap {
-    padding: 14px 20px 16px;
+    padding: 14px 0 16px;
+    overflow: hidden;
+    position: relative;
+    mask-image: linear-gradient(90deg, transparent, black 40px, black calc(100% - 40px), transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, black 40px, black calc(100% - 40px), transparent);
 }
 
 .skill-track {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    width: max-content;
     gap: 12px;
+    padding-left: 20px;
+    animation: heroScroll 34s linear infinite;
+    animation-play-state: running;
+}
+
+.skill-row.reverse .skill-track {
+    animation-name: heroScrollReverse;
+    animation-duration: 40s;
+}
+
+.skill-row:hover .skill-track {
+    animation-play-state: paused;
 }
 
 .skill-chip {
@@ -2253,6 +2286,18 @@ base_config = [
   </footer>
 
   <script>
+    // ---- Keep the user's scroll position across page refreshes ----
+    // (by default a hard refresh on GitHub Pages can snap back to the
+    // top; this remembers where you were and restores it after load)
+    if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
+    window.addEventListener('load', () => {
+      const saved = sessionStorage.getItem('scrollY');
+      if (saved) window.scrollTo(0, parseInt(saved, 10));
+    });
+    window.addEventListener('beforeunload', () => {
+      sessionStorage.setItem('scrollY', String(window.scrollY));
+    });
+
     // ---- Seamless hero skill marquee ----
     document.querySelectorAll('.hero-track').forEach(track => {
       track.innerHTML += track.innerHTML;
@@ -2405,7 +2450,8 @@ base_config = [
         const iconClass = icon.startsWith("fa-brands") ? icon : `fa-solid ${icon}`;
         return `<div class="skill-chip${cls}"><i class="${iconClass}"></i><span>${label}</span></div>`;
       }).join("");
-      el.innerHTML = chips;
+      // duplicated so the marquee (translateX(-50%)) loops seamlessly
+      el.innerHTML = chips + chips;
     });
   </script>
 </body>
