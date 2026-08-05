@@ -807,30 +807,13 @@ header {
 }
 
 .skill-track-wrap {
-    padding: 14px 0 16px;
-    overflow: hidden;
-    position: relative;
-    mask-image: linear-gradient(90deg, transparent, black 40px, black calc(100% - 40px), transparent);
-    -webkit-mask-image: linear-gradient(90deg, transparent, black 40px, black calc(100% - 40px), transparent);
+    padding: 14px 20px 16px;
 }
 
 .skill-track {
     display: flex;
-    flex-wrap: nowrap;
-    width: max-content;
+    flex-wrap: wrap;
     gap: 12px;
-    padding-left: 20px;
-    animation: heroScroll 34s linear infinite;
-    animation-play-state: running;
-}
-
-.skill-row.reverse .skill-track {
-    animation-name: heroScrollReverse;
-    animation-duration: 40s;
-}
-
-.skill-row:hover .skill-track {
-    animation-play-state: paused;
 }
 
 .skill-chip {
@@ -1611,50 +1594,167 @@ html, body {
    breathing room was silently being zeroed out. Using `section.wrap`
    (element + class) guarantees this wins, while :not(.hero) leaves
    the hero's own custom top/bottom padding untouched.
+   Kept moderate on purpose — a normal gap, not an oversized one.
    ========================================================= */
 section.wrap:not(.hero) {
-    padding-top: 96px;
-    padding-bottom: 96px;
+    padding-top: 64px;
+    padding-bottom: 64px;
 }
 
 @media (max-width: 1024px) {
     section.wrap:not(.hero) {
-        padding-top: 78px;
-        padding-bottom: 78px;
+        padding-top: 52px;
+        padding-bottom: 52px;
     }
 }
 
 @media (max-width: 700px) {
     section.wrap:not(.hero) {
-        padding-top: 56px;
-        padding-bottom: 56px;
+        padding-top: 36px;
+        padding-bottom: 36px;
     }
 }
 
 @media (max-width: 420px) {
     section.wrap:not(.hero) {
-        padding-top: 44px;
-        padding-bottom: 44px;
+        padding-top: 28px;
+        padding-bottom: 28px;
     }
 }
 
-/* Contact is the closing section — keep the quick-facts strip and
-   footer close beneath it so the page reads as one clean ending
-   instead of a separate trailing block. */
+/* Contact is now the true closing section (quick facts moved above
+   it) — keep the footer close beneath it so the page ends as one
+   clean group instead of trailing off. */
 #contact {
-    padding-bottom: 48px;
+    padding-bottom: 40px;
 }
 
 @media (max-width: 700px) {
-    #contact { padding-bottom: 36px; }
+    #contact { padding-bottom: 28px; }
+}
+
+.facts-wrap {
+    margin-top: -8px;
 }
 
 .facts-strip {
-    margin-top: 8px;
+    margin-top: 0;
 }
 
 footer {
     margin-top: 0;
+}
+
+/* Facts-strip labels (LOCATION, VISA STATUS, etc.) were too dim
+   against the dark card background to read comfortably. */
+.facts-strip .k {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+/* =========================================================
+   Fixed CV download button — right side of the viewport,
+   always visible while scrolling.
+   ========================================================= */
+.cv-fab {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px 14px 16px;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 10px 0 0 10px;
+    box-shadow: -6px 8px 24px -8px rgba(0, 0, 0, .5), 0 0 0 1px rgba(79, 216, 196, .35);
+    transition: padding .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.cv-fab svg {
+    width: 17px;
+    height: 17px;
+    flex: none;
+}
+
+.cv-fab:hover,
+.cv-fab:focus-visible {
+    padding-right: 24px;
+    background: #6ee6d4;
+    box-shadow: -8px 10px 28px -6px rgba(0, 0, 0, .55), 0 0 0 1px rgba(79, 216, 196, .55);
+}
+
+@media (max-width: 700px) {
+    .cv-fab {
+        /* Bottom-right collided with the primary Contact/Email
+           buttons as the page scrolled. Anchoring under the header
+           instead keeps it reachable without sitting on top of CTAs. */
+        top: 82px;
+        bottom: auto;
+        right: 0;
+        transform: none;
+        border-radius: 999px 0 0 999px;
+        padding: 11px 16px 11px 14px;
+        box-shadow: -4px 6px 18px -6px rgba(0, 0, 0, .55), 0 0 0 1px rgba(79, 216, 196, .35);
+    }
+
+    .cv-fab span {
+        font-size: 0.72rem;
+    }
+
+    .cv-fab:hover,
+    .cv-fab:focus-visible {
+        padding-right: 20px;
+    }
+}
+
+@media (max-width: 420px) {
+    .cv-fab {
+        top: 74px;
+        padding: 10px 14px 10px 12px;
+    }
+}
+
+/* =========================================================
+   Justified body text — paragraphs read as clean blocks with
+   even left/right edges instead of a ragged right edge.
+   Headings, labels, nav, buttons, code, and eyebrow lines are
+   intentionally excluded (justifying short/mono/UI text looks
+   broken, not clean).
+   ========================================================= */
+.about-grid p,
+.key-points li span,
+.key-points li,
+.exp-points li,
+.modal-summary,
+.project-card p,
+.contact-panel > div > p,
+.section-sub {
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+}
+
+/* Justify can leave the last line stretched oddly on very narrow
+   columns — keep it left-aligned there instead. */
+@media (max-width: 420px) {
+    .about-grid p,
+    .key-points li span,
+    .exp-points li,
+    .modal-summary,
+    .project-card p,
+    .contact-panel > div > p,
+    .section-sub {
+        text-align: left;
+        hyphens: none;
+    }
 }
 
 </style>
@@ -1678,6 +1778,17 @@ footer {
       <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
     </div>
   </header>
+
+  <!-- Fixed CV download button -->
+  <a class="cv-fab" href="assets/Ganapathi-Surya-Sai-Durgarao-Allaka-CV.pdf"
+     download="Ganapathi-Surya-Sai-Durgarao-Allaka-CV.pdf" aria-label="Download CV">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 3v12" />
+      <path d="M7 10l5 5 5-5" />
+      <path d="M4 19h16" />
+    </svg>
+    <span>CV</span>
+  </a>
 
   <main id="top">
     <!-- HERO -->
@@ -1980,6 +2091,17 @@ footer {
         </div>
       </div>
     </section>
+
+    <!-- QUICK FACTS -->
+    <div class="wrap facts-wrap">
+      <div class="facts-strip">
+        <div><span class="k">Location</span><span class="v">Jebel Ali, Dubai, UAE</span></div>
+        <div><span class="k">Visa Status</span><span class="v">Employment Visa</span></div>
+        <div><span class="k">Nationality</span><span class="v">Indian</span></div>
+        <div><span class="k">Languages</span><span class="v">English, Hindi, Telugu</span></div>
+        <div><span class="k">Availability</span><span class="v">Open to relocate</span></div>
+      </div>
+    </div>
 
     <!-- CONTACT -->
     <section id="contact" class="wrap">
@@ -2350,16 +2472,6 @@ base_config = [
     </div>
   </div>
 
-  <div class="wrap">
-    <div class="facts-strip">
-      <div><span class="k">Location</span><span class="v">Jebel Ali, Dubai, UAE</span></div>
-      <div><span class="k">Visa Status</span><span class="v">Employment Visa</span></div>
-      <div><span class="k">Nationality</span><span class="v">Indian</span></div>
-      <div><span class="k">Languages</span><span class="v">English, Hindi, Telugu</span></div>
-      <div><span class="k">Availability</span><span class="v">Open to relocate</span></div>
-    </div>
-  </div>
-
   <footer>
     <div class="wrap footer-inner">
       <span>© 2026 Ganapathi Surya Sai Durgarao Allaka</span>
@@ -2556,8 +2668,7 @@ base_config = [
         const iconClass = icon.startsWith("fa-brands") ? icon : `fa-solid ${icon}`;
         return `<div class="skill-chip${cls}"><i class="${iconClass}"></i><span>${label}</span></div>`;
       }).join("");
-      // duplicated so the marquee (translateX(-50%)) loops seamlessly
-      el.innerHTML = chips + chips;
+      el.innerHTML = chips;
     });
   </script>
 </body>
